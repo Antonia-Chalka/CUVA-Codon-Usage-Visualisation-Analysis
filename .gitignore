@@ -1,0 +1,9 @@
+
+.ipynb_checkpoints/
+fasta_cds/
+__pycache__/
+ref_files/Extra_geneInfoField.txt
+ref_files/CodonW.exe
+ref_files/FOP_SampleAttributesDSCodons.txt
+ref_files/FOP_SampleAttributesDSSample.txt
+ref_files/time_class_name.csv
