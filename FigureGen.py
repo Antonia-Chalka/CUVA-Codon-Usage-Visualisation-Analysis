@@ -798,14 +798,14 @@ FOP_GC3_ALL  <- function(dat, imagepath)
             self.RFunction.FOP_Ref_Clustermap(pandas2ri.py2ri(graph_values), 'FOP_Ref_Clustermap.tiff')
 
         elif graph_type == 'FOP_SamplesGenes_Clustermap':
-            fop_columns = self.masterdf.filter(regex="SFOP_*").columns.tolist()
+            fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Gene')[fop_columns].mean()
 
             self.RFunction.FOP_SamplesGenes_Clustermap(pandas2ri.py2ri(graph_values), pandas2ri.py2ri(self.ann),
                                                        'FOP_SamplesGenes_Clustermap.tiff')
 
         elif graph_type == 'FOP_SamplesStrains_Clustermap':
-            fop_columns = self.masterdf.filter(regex="SFOP_*").columns.tolist()
+            fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Strain_ID')[fop_columns].mean()
             if len(graph_values.index) != 1:
                 self.RFunction.FOP_SamplesStrains_Clustermap(pandas2ri.py2ri(graph_values),
@@ -826,6 +826,7 @@ FOP_GC3_ALL  <- function(dat, imagepath)
 
 
 '''
+
 # Make fop ref clustermap
 fop_ref = pd.read_csv("fop_ref.csv")
 fop_ref.set_index('Tissue', inplace=True)
@@ -833,7 +834,6 @@ fop_ref.drop(['SMTS','SMTSD'], axis=1, inplace=True)
 print(fop_ref)
 new = FigureGen(fop_ref)
 new.make_graph('FOP_Ref_Clustermap')
-
 '''
 
 new = FigureGen(pd.read_csv("all_masterfile.csv"), pd.read_csv("time_class_name.csv", index_col='Gene'))

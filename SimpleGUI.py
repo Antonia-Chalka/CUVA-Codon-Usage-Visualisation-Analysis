@@ -6,10 +6,6 @@ Created on 6 Jun 2019
 import PySimpleGUI as sg
 import os
 
-# TODO: FILTER SETTINGS, TABLE, GRAPH TAB
-
-print = sg.EasyPrint
-
 print('Setting up Input Section Layout')
 
 Input_Layout = [
@@ -75,7 +71,7 @@ Output_Layout = [
     [sg.Checkbox('Export FOP reference file (if it exists) as...'),
      sg.InputText(default_text='fop_ref.csv')],
     [sg.Checkbox('Generate & save all possible figures.')]]
-#TODO ADD EXPORT OPTION
+
 Misc_Layout = [
     [sg.Text('CodonW Directory'),
      sg.InputText(os.path.dirname(os.path.realpath(__file__)), key='_CodonW_'),
@@ -87,15 +83,7 @@ Misc_Layout = [
     [sg.Text('Figure regex filter'), sg.InputText('Possible|note|RL5A_+|RL6_+')]
 ]
 
-Graph_Layout = [
-    [sg.Text('Select Figure: '), sg.Combo(), sg.Submit('Generate')
-
-    ]
-]
-# TODO SET UP COMBOBOX
-# TODO SET UP ELEMENT
-
-print('Setting up General Tab layout...')
+print('Setting up General Tab Window_Layout...')
 GenTab_Layout = [
     [sg.TabGroup(layout=[[
         sg.Tab('Input Settings', layout=Input_Layout),
@@ -107,20 +95,36 @@ GenTab_Layout = [
     [sg.Multiline('Awaiting user input...', size=(50, 5), disabled=True, autoscroll=True)],
     [sg.Submit(button_text='RUN', key='_RUN_', size=(30, 2)), sg.Button('Reset to Default', key='_reset_')]
 ]
-print('Setting up Table Tab layout...')
+print('Setting up Table Tab Window_Layout...')
+
+Settings_Layout = []
 
 
-# FigTab_Layout = [[]]
+print('Setting up Figure Window_Layout...')
+graph_combo = [
+    'Gene_RSCU_Clustermap', 'Strain_RSCU_Clustermap',
+    'ENC_Heatmap',
+    'Gene_RSCU_Clustermap_Di', 'Gene_RSCU_Clustermap_Tri', 'Gene_RSCU_Clustermap_Tetra', 'Gene_RSCU_Clustermap_Hexa',
+    'Strain_RSCU_Clustermap_Di', 'Strain_RSCU_Clustermap_Tri', 'Strain_RSCU_Clustermap_Tetra', 'Strain_RSCU_Clustermap_Hexa',
+    'FOP_Gene_Clustermap', 'FOP_Strain_Clustermap',
+    'FOP_SamplesGenes_Clustermap', 'FOP_SamplesStrains_Clustermap',
+    'FOP_GC3_Genes', 'FOP_GC3_Strains', 'FOP_GC3_ALL',
+    'FOP_Ref_Clustermap'
+]
+
+Figure_Layout = [
+    [sg.Text('Select Figure: '), sg.Combo(graph_combo), sg.Submit('Generate')],
+    [sg.Image()],
+    [sg.Text('No figure fenerated'), sg.Text('Figure saved as: ')]
+]
+
 print('Setting up General Layout...')
-layout = [[sg.TabGroup([[sg.Tab('General', GenTab_Layout)]])]]
-
-
-# layout = [[[ sg.TabGroup( [[ sg.Tab('General', GenTab_Layout),
-# sg.Tab('Table', SetTab_Layout),
-# sg.Tab('Figures', FigTab_Layout) ]] ) ]]]
+Window_Layout = [[sg.TabGroup([[
+    sg.Tab('General', GenTab_Layout), sg.Tab('Figures', Figure_Layout)
+]])]]
 
 print('Setting up Window...')
-window = sg.Window('Codon Usage Analysis & Visualisation', layout, default_element_size=(12, 1))
+window = sg.Window('Codon Usage Analysis & Visualisation', Window_Layout, default_element_size=(12, 1))
 
 print('Beggining event handling...')
 while True:
