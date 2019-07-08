@@ -126,7 +126,7 @@ Window_Layout = [[sg.TabGroup([[
 print('Setting up Window...')
 window = sg.Window('Codon Usage Analysis & Visualisation', Window_Layout, default_element_size=(12, 1))
 
-print('Beggining event handling...')
+print('Beginning event handling...')
 while True:
     event, values = window.Read()
     print(event, values)
@@ -134,5 +134,9 @@ while True:
         break
     if event == 'Show':
         pass
-
+    if event == 'Test':
+        file_path = None
+        for file in os.listdir(file_path):
+            if file.endswith(".fasta"):
+                pass
 window.Close()

@@ -7,7 +7,6 @@ import pandas as pd
 import os
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
-# from CodonUsage import CodonData
 
 
 class FigureGen(object):
@@ -616,7 +615,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
                 # 'Melt' ENC values (transpose into a matrix), with Strains as rows and Genes as columns
                 # graph_values = graph_values.pivot_table(index='Strain_ID', columns='Gene', values='ENC')
 
-                # TODO CHANGE R FUNCTION S THAT IT ACCEPTS EITHER BOTH/NEITHER GENE&STRAIN ANN
                 # If annotation files have been loaded, add it when calling R function
                 if (self.strain_ann is None) and (self.gene_ann is None):
                     self.RFunction.ENC_Heatmap(graph_values, outvar)
@@ -766,8 +764,8 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
             self.RFunction.FOP_GC3_ALL(graph_values, outvar)
 
 
+#TODO SORT OUT FOP REF FIGURE CREATION
 '''
-
 # Make fop ref clustermap
 fop_ref = pd.read_csv("fop_ref.csv")
 fop_ref.set_index('Tissue', inplace=True)
@@ -778,7 +776,8 @@ new.make_graph('FOP_Ref_Clustermap')
 '''
 
 new = FigureGen(pd.read_csv("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage_Output\\fopmode_masterfile.csv"),
-                pd.read_csv("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage\\ref_files\\time_class_name.csv", index_col='Gene'))
+                pd.read_csv("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage\\ref_files\\time_class_name.csv", index_col='Gene')
+                )
 
 
 new.make_graph('Gene_RSCU_Clustermap')

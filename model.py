@@ -7,6 +7,7 @@ Created on 20 May 2019
 import pandas as pd
 import os
 import numpy as np
+from subprocess import call
 
 '''
 Class representing codon data across strains and genes. Relies on codonW to perform RSCU and ENC analysis.
@@ -141,53 +142,152 @@ class CodonData(object):
        'Tyr': ['Y_UAU', 'Y_UAC']
        }
 
-    def __init__(self):
+    def __init__(self, fop_type=None, fop_ref_df=None, fop_dic=None,
+                 codonw_dir=os.path.dirname(os.path.realpath(__file__))+"\\ref_files\\codonW",
+                 codonw_out_dir=os.path.dirname(os.path.realpath(__file__))+"\\codonw_out\\"):
         print("Initialising model data frame...")
         self.masterdf = pd.DataFrame(columns=self.col_names)  # Set up masterdf
-        self.fop_type = None
-        self.fop_ref_df = None
-        self.fop_dic = None
+        self.fop_type = fop_type
+        self.fop_ref_df = fop_ref_df
+        self.fop_dic = fop_dic
+        self.codonw_dir = codonw_dir
+        self.codonw_out_dir = codonw_out_dir + "\\"
 
-    def make_rscu_file(self, input_file):
+    def make_rscu_file(self, input_file, input_dir):
         print("Calculating RSCU values for file:" + input_file)
-        
-        cmd = 'CodonW ' + input_file + '.fasta -nomenu -silent -rscu'
+
+        # command summary = codonw inputfile -silent -nomenu -rscuoutname1 outname2
+        cmd = self.codonw_dir + " " + input_dir + input_file + ".fasta" +\
+            ' -silent -nomenu -rscu ' +\
+            self.codonw_out_dir + input_file + '.none ' +\
+            self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        os.system(cmd)
+        call(cmd, shell=True)
         
-        print("Parsing RSCU file...")
-        rscu_file = open(input_file + ".blk", "r")
+        # print("Parsing RSCU file...")
+        rscu_file = open(self.codonw_out_dir + input_file + '.blk', "r")
         sections = rscu_file.read().split("\n\n")  # split when 2 newlines (1 gene has 5 of such sections)
         sections = [x.split() for x in sections]  # remove whitespace
         # remove Amino Acid and Codon Names
         sections = [[i for i in x if i not in self.AANames and i not in self.CodonNames] for x in sections]
         rscu_file.close()
-        
+
         return sections
     
-    def make_enc_file(self, input_file):
+    def make_enc_file(self, input_file, input_dir):
         print("Calculating ENC values for file:" + input_file)
-        cmd = "codonW " + input_file + ".fasta -nomenu -silent -enc -machine "
+        # command summary = codonw inputfile (options) rscuoutname1 outname2
+        cmd = self.codonw_dir + " " + input_dir + input_file + ".fasta" +\
+            ' -silent -nomenu -enc -machine ' +\
+            self.codonw_out_dir + input_file + '.enc ' +\
+            self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        os.system(cmd)
+        call(cmd, shell=True)
+
         print("Parsing ENC file...")
-        enc_file = open(input_file + ".out", "r")
+        enc_file = open(self.codonw_out_dir + input_file + ".enc", "r")
         enc_rows = enc_file.read().split("\n")  # Extract rows
         enc_file.close()
         
         return enc_rows
 
-    def make_gc3_file(self, input_file):
+    def make_gc3_file(self, input_file, input_dir):
         print("Calculating GC3 values for file: " + input_file)
-        cmd = "codonW " + input_file + ".fasta -nomenu -gc3s -machine -silent"
+        # command summary = codonw inputfile (options) rscuoutname1 outname2
+        cmd = self.codonw_dir + " " + input_dir + input_file + ".fasta" + \
+            ' -silent -nomenu -gc3s -machine ' + \
+            self.codonw_out_dir + input_file + '.gc3 ' + \
+            self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        os.system(cmd)
+        call(cmd, shell=True)
+
         print("Parsing GC3 file...")
-        gc3_file = open(input_file + ".out", "r")
+        gc3_file = open(self.codonw_out_dir + input_file + ".gc3", "r")
         gc3_rows = gc3_file.read().split("\n")  # Extract rows
         gc3_file.close()
 
         return gc3_rows
+
+    def parse_masterfile_values(self, strain_name, rscu_sections, enc_rows, gc3_rows):
+        print("Gathering values to add to masterdf for Strain: " + strain_name + "...")
+
+        # Populate master file
+        print("Gathering RSCU values...")
+        rscu_values = []
+        rscu_gene_list = []
+
+        # Each loop represents a gene and is used to create a row to be added to data frame
+        for i in range(0, len(rscu_sections) - 1, 5):
+            # Collate RSCU Sections
+            rcsu_row = [int(rscu_sections[i + 4][0])]  # Number of codons
+            rcsu_row.extend((float(j) for j in rscu_sections[i]))
+            rcsu_row.extend((float(j) for j in rscu_sections[i + 1]))
+            rcsu_row.extend((float(j) for j in rscu_sections[i + 2]))
+            rcsu_row.extend((float(j) for j in rscu_sections[i + 3]))
+
+            rscu_values.append(rcsu_row)
+            rscu_gene_list.append(rscu_sections[i + 4][3])
+
+        print("Parsing ENC values...")
+        enc_values = []
+        enc_gene_list = []
+        for i in range(1, len(enc_rows) - 1):
+            enc_fields = enc_rows[i].split()
+            enc_gene_list.append(enc_fields[0])
+            if enc_fields[1] == '*****':
+                enc_fields[1] = np.nan
+            enc_values.append(float(enc_fields[1]))
+
+        print("Parsing GC3 values...")
+        gc3_values = []
+        gc3_gene_list = []
+        for i in range(1, len(gc3_rows) - 1):
+            gc3_fields = gc3_rows[i].split()
+            gc3_gene_list.append(gc3_fields[0])
+            if len(gc3_fields) == 1:
+                gc3_fields.append(np.nan)
+            gc3_values.append(float(gc3_fields[1]))
+
+        print("Collating values in masterdf...")
+        for i in range(0, len(rscu_values)):
+            masterfile_row = [strain_name, enc_gene_list[i]]
+            masterfile_row.extend(rscu_values[i])
+            masterfile_row.append(enc_values[i])
+            masterfile_row.append(gc3_values[i])
+
+            self.masterdf.loc[len(self.masterdf)] = masterfile_row
+
+    def qc_rscu(self, rscuqc_thres=15):  # Quality control RSCU  values
+        # rscuqc_thres: Threshold for how many times a codon column must have a non-NaN value.
+        # Above threshold counts are retained and vice versa.
+
+        print("Beginning quality control of RSCU values across amino acids...")
+        for i in self.masterdf.index:
+            # print("Checking row " + str(i))
+            for aa in self.SynonymousCodons:
+                degeneracy = len(self.SynonymousCodons[aa])
+                aa_count = 0
+
+                for codon in self.SynonymousCodons[aa]:
+                    aa_count += self.masterdf.at[i, codon + "_Num"]
+                # print("AA: " + aa + ". Codon (column): " + codon +
+                #      ". Degeneracy: " + str(degeneracy) + ". Count: " + str(aa_count))
+                if degeneracy > aa_count:
+                    # print("Num of codons less than degeneracy. Filling with Nan values...")
+                    for codon in self.SynonymousCodons[aa]:
+                        self.masterdf.at[i, codon + "_RSCU"] = np.nan
+
+        print("Beginning quality control of RSCU values across strains...")
+        grouped = self.masterdf.groupby("Strain_ID")
+        for strain, group in grouped:
+            # print("Checking codons for Strain:" + strain)
+            for aa in self.SynonymousCodons:
+                for codon in self.SynonymousCodons[aa]:
+                    rscu_column = codon + "_RSCU"
+                    if group[rscu_column].notna().count() < rscuqc_thres:
+                        # print("Codon with > " + str(rscuqc_thres) + " reps ( " + strain + " " + codon +
+                        # " ). Setting to Nan...")
+                        self.masterdf.loc[self.masterdf.Strain_ID == strain, rscu_column] = np.nan
 
     def set_fop_ref(self, fop_ref_path):
         print("reading fop file...")
@@ -250,105 +350,17 @@ class CodonData(object):
         print('joining')
         self.masterdf = self.masterdf.join(fop_df)
 
-    def parse_masterfile_values(self, strain_name, rscu_sections, enc_rows, gc3_rows):
-        print("Gathering values to add to masterdf for Strain: " + strain_name + "...")
+    def iterate_populate_master_file(self, file_path, file): #TODO CHANGE AND MOVE (ADD ARGS)
+        input_file = os.path.splitext(file)[0]
+
+        rscu_sections = self.make_rscu_file(input_file, file_path + "\\")
+        enc_rows = self.make_enc_file(input_file, file_path + "\\")
+        gc3_rows = self.make_gc3_file(input_file, file_path + "\\")
+
+        self.parse_masterfile_values(input_file, rscu_sections, enc_rows, gc3_rows)
         
-        # Populate master file
-        print("Gathering RSCU values...")
-        rscu_values = []
-        rscu_gene_list = []
-
-        # Each loop represents a gene and is used to create a row to be added to data frame
-        for i in range(0, len(rscu_sections) - 1, 5):
-            # Collate RSCU Sections
-            rcsu_row = [int(rscu_sections[i + 4][0])]  # Number of codons
-            rcsu_row.extend((float(j) for j in rscu_sections[i]))
-            rcsu_row.extend((float(j) for j in rscu_sections[i + 1]))
-            rcsu_row.extend((float(j) for j in rscu_sections[i + 2]))
-            rcsu_row.extend((float(j) for j in rscu_sections[i + 3]))
-    
-            rscu_values.append(rcsu_row)
-            rscu_gene_list.append(rscu_sections[i + 4][3])
-        
-        print("Parsing ENC values...")
-        enc_values = []
-        enc_gene_list = []
-        for i in range(1, len(enc_rows) - 1):
-            enc_fields = enc_rows[i].split()
-            enc_gene_list.append(enc_fields[0])
-            if enc_fields[1] == '*****':
-                enc_fields[1] = np.nan
-            enc_values.append(float(enc_fields[1]))
-
-        print("Parsing GC3 values...")
-        gc3_values = []
-        gc3_gene_list = []
-        for i in range(1, len(gc3_rows) - 1):
-            gc3_fields = gc3_rows[i].split()
-            gc3_gene_list.append(gc3_fields[0])
-            if len(gc3_fields) == 1:
-                gc3_fields.append(np.nan)
-            gc3_values.append(float(gc3_fields[1]))
-
-        print("Collating values in masterdf...")
-        for i in range(0, len(rscu_values)):
-            masterfile_row = [strain_name, enc_gene_list[i]]
-            masterfile_row.extend(rscu_values[i])
-            masterfile_row.append(enc_values[i])
-            masterfile_row.append(gc3_values[i])
-
-            self.masterdf.loc[len(self.masterdf)] = masterfile_row
-
-    def qc_rscu(self, rscuqc_thres=15):  # Quality control RSCU  values
-        # rscuqc_thres: Threshold for how many times a codon column must have a non-NaN value.
-        # Above threshold counts are retained and vice versa.
-
-        print("Beginning quality control of RSCU values across amino acids...")
-        for i in self.masterdf.index:
-            # print("Checking row " + str(i))
-            for aa in self.SynonymousCodons:
-                degeneracy = len(self.SynonymousCodons[aa]) 
-                aa_count = 0
-                
-                for codon in self.SynonymousCodons[aa]:
-                    aa_count += self.masterdf.at[i, codon + "_Num"]
-                # print("AA: " + aa + ". Codon (column): " + codon +
-                #      ". Degeneracy: " + str(degeneracy) + ". Count: " + str(aa_count))
-                if degeneracy > aa_count:
-                    # print("Num of codons less than degeneracy. Filling with Nan values...")
-                    for codon in self.SynonymousCodons[aa]:
-                        self.masterdf.at[i, codon + "_RSCU"] = np.nan
-
-        print("Beginning quality control of RSCU values across strains...")
-        grouped = self.masterdf.groupby("Strain_ID")  
-        for strain, group in grouped:
-            # print("Checking codons for Strain:" + strain)
-            for aa in self.SynonymousCodons:
-                for codon in self.SynonymousCodons[aa]:
-                    rscu_column = codon + "_RSCU"
-                    if group[rscu_column].notna().count() < rscuqc_thres:
-                        # print("Codon with > " + str(rscuqc_thres) + " reps ( " + strain + " " + codon +
-                        # " ). Setting to Nan...")
-                        self.masterdf.loc[self.masterdf.Strain_ID == strain, rscu_column] = np.nan
-
-    def iterate_populate_master_file(self, file_path): #TODO CHANGE AND MOVE (ADD ARGS)
-        print("Changing directory to " + file_path)
-        os.chdir(file_path)
-        
-        for file in os.listdir(file_path):
-            if file.endswith(".fasta"):
-                input_file = os.path.splitext(file)[0]
-                strain_name = os.path.splitext(input_file)[0]  # without extensions
-
-                rscu_sections = self.make_rscu_file(input_file)
-                enc_rows = self.make_enc_file(input_file)
-                gc3_rows = self.make_gc3_file(input_file)
-
-                self.parse_masterfile_values(strain_name, rscu_sections, enc_rows, gc3_rows)
-        self.qc_rscu()
-        
-    def export_csv(self, out_filepath):
-        self.masterdf.to_csv(out_filepath, index=False)
+    def export_csv(self, out_name, out_path=os.path.dirname(os.path.realpath(__file__)) + '//Output//'):
+        self.masterdf.to_csv(out_path+out_name, index=False)
         
     def import_csv(self, csv_path):
         self.masterdf = pd.read_csv(csv_path)
@@ -358,7 +370,9 @@ model = CodonData()
 
 # filepath= os.path.dirname(os.path.realpath(__file__))
 filepath = os.path.abspath("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage\\fasta_cds")
-# model.iterate_populate_master_file(filepath)
+for file in os.listdir(filepath):
+    if file.endswith(".fasta"):
+        model.iterate_populate_master_file(filepath, file)
 
 '''
 model.calculate_fop(tissues)
