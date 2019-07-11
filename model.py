@@ -257,6 +257,15 @@ class CodonData(object):
 
             self.masterdf.loc[len(self.masterdf)] = masterfile_row
 
+    def iterate_populate_master_file(self, file_path, infile):
+        input_file = os.path.splitext(infile)[0]
+
+        rscu_sections = self.make_rscu_file(input_file, file_path + "\\")
+        enc_rows = self.make_enc_file(input_file, file_path + "\\")
+        gc3_rows = self.make_gc3_file(input_file, file_path + "\\")
+
+        self.parse_masterfile_values(input_file, rscu_sections, enc_rows, gc3_rows)
+
     def qc_rscu(self, rscuqc_thres=15):  # Quality control RSCU  values
         # rscuqc_thres: Threshold for how many times a codon column must have a non-NaN value.
         # Above threshold counts are retained and vice versa.
@@ -288,6 +297,7 @@ class CodonData(object):
                         # print("Codon with > " + str(rscuqc_thres) + " reps ( " + strain + " " + codon +
                         # " ). Setting to Nan...")
                         self.masterdf.loc[self.masterdf.Strain_ID == strain, rscu_column] = np.nan
+
 
     def set_fop_ref(self, fop_ref_path):
         print("reading fop file...")
@@ -350,14 +360,6 @@ class CodonData(object):
         print('joining')
         self.masterdf = self.masterdf.join(fop_df)
 
-    def iterate_populate_master_file(self, file_path, file): #TODO CHANGE AND MOVE (ADD ARGS)
-        input_file = os.path.splitext(file)[0]
-
-        rscu_sections = self.make_rscu_file(input_file, file_path + "\\")
-        enc_rows = self.make_enc_file(input_file, file_path + "\\")
-        gc3_rows = self.make_gc3_file(input_file, file_path + "\\")
-
-        self.parse_masterfile_values(input_file, rscu_sections, enc_rows, gc3_rows)
         
     def export_csv(self, out_name, out_path=os.path.dirname(os.path.realpath(__file__)) + '//Output//'):
         self.masterdf.to_csv(out_path+out_name, index=False)
