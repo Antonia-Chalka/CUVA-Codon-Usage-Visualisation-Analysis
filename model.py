@@ -7,6 +7,7 @@ Created on 20 May 2019
 import pandas as pd
 import os
 import numpy as np
+from subprocess import call
 
 '''
 Class representing codon data across strains and genes. Relies on codonW to perform RSCU and ENC analysis.
@@ -27,7 +28,6 @@ Its methods include:
 
 
 class CodonData(object):
-    
     # List of codon names, used for filtering RSCU input file
     CodonNames = ['UUU', 'UCU', 'UAU', 'UGU',
                   'UUC', 'UCC', 'UAC', 'UGC',
@@ -51,7 +51,6 @@ class CodonData(object):
                'His', 'Ile', 'Leu', 'Lys',
                'Met', 'Phe', 'Pro', 'Ser',
                'Thr', 'Trp', 'Tyr', 'Val', 'TER']
-    
     # Setting up columns of masterdf
     col_names = ['Strain_ID', 'Gene', 'Total_Num_Codons',
                  'F_UUU_Num', 'F_UUU_RSCU',
@@ -118,9 +117,8 @@ class CodonData(object):
                  'A_GCG_Num', 'A_GCG_RSCU',
                  'E_GAG_Num', 'E_GAG_RSCU',
                  'G_GGG_Num', 'G_GGG_RSCU',
-                 'ENC', 'CAI', 'GC3']
-    
-    # Used for qc_rscu
+                 'ENC', 'GC3']
+    # Used for rscu quality controls (qc_rscu)
     SynonymousCodons = { 
        'Ala': ['A_GCA', 'A_GCC', 'A_GCG', 'A_GCU'], 
        'Cys': ['C_UGU', 'C_UGC'], 
@@ -143,161 +141,76 @@ class CodonData(object):
        'Trp': ['W_UGG'], 
        'Tyr': ['Y_UAU', 'Y_UAC']
        }
-    # Threshold for how many times a codon column must have a non-NaN value.
-    # Above threshold counts are retained and vice versa.
-    RSCUQC_Thres = 15
 
-    def __init__(self):
+    def __init__(self, fop_type=None, fop_ref_df=None, fop_dic=None,
+                 codonw_dir=os.path.dirname(os.path.realpath(__file__))+"\\ref_files\\codonW",
+                 codonw_out_dir=os.path.dirname(os.path.realpath(__file__))+"\\codonw_out\\"):
         print("Initialising model data frame...")
         self.masterdf = pd.DataFrame(columns=self.col_names)  # Set up masterdf
+        self.fop_type = fop_type
+        self.fop_ref_df = fop_ref_df
+        self.fop_dic = fop_dic
+        self.codonw_dir = codonw_dir
+        self.codonw_out_dir = codonw_out_dir + "\\"
 
-    def make_rscu_file(self, input_file):
+    def make_rscu_file(self, input_file, input_dir):
         print("Calculating RSCU values for file:" + input_file)
-        
-        cmd = 'CodonW ' + input_file + '.fasta -nomenu -silent -rscu'
+
+        # command summary = codonw inputfile -silent -nomenu -rscuoutname1 outname2
+        cmd = self.codonw_dir + " " + input_dir + input_file + ".fasta" +\
+            ' -silent -nomenu -rscu ' +\
+            self.codonw_out_dir + input_file + '.none ' +\
+            self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        os.system(cmd)
+        call(cmd, shell=True)
         
-        print("Parsing RSCU file...")
-        rscu_file = open(input_file + ".blk", "r")
+        # print("Parsing RSCU file...")
+        rscu_file = open(self.codonw_out_dir + input_file + '.blk', "r")
         sections = rscu_file.read().split("\n\n")  # split when 2 newlines (1 gene has 5 of such sections)
         sections = [x.split() for x in sections]  # remove whitespace
         # remove Amino Acid and Codon Names
         sections = [[i for i in x if i not in self.AANames and i not in self.CodonNames] for x in sections]
         rscu_file.close()
-        
+
         return sections
     
-    def make_enc_file(self, input_file):
+    def make_enc_file(self, input_file, input_dir):
         print("Calculating ENC values for file:" + input_file)
-        cmd = "codonW " + input_file + ".fasta -nomenu -silent -enc -machine "
+        # command summary = codonw inputfile (options) rscuoutname1 outname2
+        cmd = self.codonw_dir + " " + input_dir + input_file + ".fasta" +\
+            ' -silent -nomenu -enc -machine ' +\
+            self.codonw_out_dir + input_file + '.enc ' +\
+            self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        os.system(cmd)
+        call(cmd, shell=True)
+
         print("Parsing ENC file...")
-        enc_file = open(input_file + ".out", "r")
+        enc_file = open(self.codonw_out_dir + input_file + ".enc", "r")
         enc_rows = enc_file.read().split("\n")  # Extract rows
         enc_file.close()
         
         return enc_rows
 
-    def make_gc3_file(self, input_file):
+    def make_gc3_file(self, input_file, input_dir):
         print("Calculating GC3 values for file: " + input_file)
-        cmd = "codonW " + input_file + ".fasta -nomenu -gc3s -machine -silent"
+        # command summary = codonw inputfile (options) rscuoutname1 outname2
+        cmd = self.codonw_dir + " " + input_dir + input_file + ".fasta" + \
+            ' -silent -nomenu -gc3s -machine ' + \
+            self.codonw_out_dir + input_file + '.gc3 ' + \
+            self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        os.system(cmd)
+        call(cmd, shell=True)
+
         print("Parsing GC3 file...")
-        gc3_file = open(input_file + ".out", "r")
+        gc3_file = open(self.codonw_out_dir + input_file + ".gc3", "r")
         gc3_rows = gc3_file.read().split("\n")  # Extract rows
         gc3_file.close()
 
         return gc3_rows
-    # TODO ADD CALCULATE GC3 files
 
-    def make_cai_file(self, input_file):
-        # TBD LATER
-        cai_rows = []
-        return cai_rows
-
-    def make_fop_ref(self, codon_file, info_file):
-        fop_codon_df = pd.read_csv(codon_file, sep='\t', header=0)
-        sample_ref_df = pd.read_csv(info_file, sep='\t', header=0, usecols=['SAMPID', 'SMTS', 'SMTSD'])
-        self.fop_ref_df = fop_codon_df.set_index('Tissue').join(sample_ref_df.set_index('SAMPID'))
-        self.fop_ref_df = self.fop_ref_df.dropna(axis=1)
-        self.fop_ref_df.to_csv('fop_ref.csv')
-
-    def set_fop_ref(self, fopref_path):
-        print("reading fop file...")
-        self.fop_ref_df = pd.read_csv(fopref_path)
-
-    def set_fop_dict(self, foptype):
-        self.foptype = foptype  # TODO MOVE
-        print("setting reference..." + foptype)
-        columns = ['A_GCA', 'A_GCC', 'A_GCG', 'A_GCU', 'C_UGC', 'C_UGU', 'E_GAA', 'E_GAG', 'D_GAC', 'D_GAU',
-                   'G_GGA', 'G_GGC', 'G_GGG', 'G_GGU', 'F_UUC', 'F_UUU', 'I_AUA', 'I_AUC', 'I_AUU', 'H_CAC',
-                   'H_CAU', 'K_AAA', 'K_AAG', 'L_CUA', 'L_CUC', 'L_CUG', 'L_CUU', 'L_UUA', 'L_UUG', 'N_AAC',
-                   'N_AAU', 'Q_CAA', 'Q_CAG', 'P_CCA', 'P_CCC', 'P_CCG', 'P_CCU', 'S_AGC', 'S_AGU', 'S_UCA',
-                   'S_UCC', 'S_UCG', 'S_UCU', 'R_AGA', 'R_AGG', 'R_CGA', 'R_CGC', 'R_CGG', 'R_CGU', 'T_ACA',
-                   'T_ACC', 'T_ACG', 'T_ACU', 'V_GUA', 'V_GUC', 'V_GUG', 'V_GUU', 'Y_UAC', 'Y_UAU']
-        if foptype == 'mode':
-            self.fopdic = self.fop_ref_df.groupby('SMTS')[columns].agg(pd.Series.mode)
-        elif foptype == 'random':
-            self.fopdic = self.fop_ref_df.groupby('SMTS')[columns].first()
-        elif foptype == 'detail_all':
-            columns.append('Tissue')
-            ebv = self.fop_ref_df.loc[self.fop_ref_df['SMTSD'] == 'Cells - EBV-transformed lymphocytes'][columns]
-            ebv = ebv.assign(Tissue=ebv.Tissue + '_EBV')
-
-            fibro = self.fop_ref_df.loc[self.fop_ref_df['SMTSD'] == 'Cells - Transformed fibroblasts'][columns]
-            fibro = fibro.assign(Tissue=fibro.Tissue + '_FIBRO')
-
-            blood = self.fop_ref_df.loc[self.fop_ref_df['SMTSD'] == 'Whole Blood'][columns].head(100)
-            blood = blood.assign(Tissue=blood.Tissue + "_WB")
-
-            skin = self.fop_ref_df[self.fop_ref_df['SMTSD'].str.contains("Skin")][columns].head(100)
-            skin = skin.assign(Tissue=skin.Tissue + "_Skin")
-
-            self.fopdic = pd.concat([ebv, fibro, blood, skin], ignore_index=True)
-            self.fopdic.set_index('Tissue', drop=True, inplace=True)
-        elif foptype == 'temp':
-
-            lung = self.fop_ref_df.loc[self.fop_ref_df['SMTS'] == 'Lung'][columns].agg(pd.Series.mode)
-            saliva = self.fop_ref_df.loc[self.fop_ref_df['SMTS'] == 'Salivary Gland'][columns].agg(pd.Series.mode)
-            sintestine = self.fop_ref_df.loc[self.fop_ref_df['SMTS'] == 'Small Intestine'][columns].agg(pd.Series.mode)
-            kidney = self.fop_ref_df.loc[self.fop_ref_df['SMTS'] == 'Kidney'][columns].agg(pd.Series.mode)
-            liver = self.fop_ref_df.loc[self.fop_ref_df['SMTS'] == 'Liver'][columns].agg(pd.Series.mode)
-            pancreas = self.fop_ref_df.loc[self.fop_ref_df['SMTS'] == 'Pancreas'][columns].agg(pd.Series.mode)
-
-
-            # 3 tissues WB,
-            pass
-
-
-    def calculate_fop(self, tissues):
-        codons = ['A_GCA', 'A_GCC', 'A_GCG', 'A_GCU', 'C_UGC', 'C_UGU', 'E_GAA', 'E_GAG', 'D_GAC', 'D_GAU',
-                  'G_GGA', 'G_GGC', 'G_GGG', 'G_GGU', 'F_UUC', 'F_UUU', 'I_AUA', 'I_AUC', 'I_AUU', 'H_CAC',
-                  'H_CAU', 'K_AAA', 'K_AAG', 'L_CUA', 'L_CUC', 'L_CUG', 'L_CUU', 'L_UUA', 'L_UUG', 'N_AAC',
-                  'N_AAU', 'Q_CAA', 'Q_CAG', 'P_CCA', 'P_CCC', 'P_CCG', 'P_CCU', 'S_AGC', 'S_AGU', 'S_UCA',
-                  'S_UCC', 'S_UCG', 'S_UCU', 'R_AGA', 'R_AGG', 'R_CGA', 'R_CGC', 'R_CGG', 'R_CGU', 'T_ACA',
-                  'T_ACC', 'T_ACG', 'T_ACU', 'V_GUA', 'V_GUC', 'V_GUG', 'V_GUU', 'Y_UAC', 'Y_UAU']
-        if tissues == 'all':
-            tissues = self.fopdic.index.tolist()
-        if self.foptype == 'detail_all':
-            prefix = 'SFOP'
-        elif self.foptype == 'mode' or self.foptype == 'random':
-            prefix = 'FOP'
-
-        fop_dict = self.fopdic.to_dict(orient='index')
-        fop_all_values = {}
-        i = 0
-        for row in self.masterdf.itertuples():
-            totaln_index = self.masterdf.columns.get_loc('Total_Num_Codons') + 1
-            print(i)
-            i += 1
-            fop_row_values = {}
-            for tissue in tissues:
-                fop = 0
-                for codon in codons:
-                    if fop_dict[tissue][codon] == 1:
-                        col_index = self.masterdf.columns.get_loc(codon + '_Num') + 1
-                        fop += row[col_index]
-                if row[totaln_index] == 0:
-                    fop = np.nan
-                else:
-                    fop = fop / row[totaln_index]
-                print(fop)
-                fop_row_values[prefix + "_" + tissue] = fop
-            fop_all_values[row[0]] = fop_row_values
-
-        print('making dataframe fop')
-        fop_df = pd.DataFrame.from_dict(fop_all_values, orient='index')
-        print('joining')
-        self.masterdf = self.masterdf.join(fop_df)
-
-    def parse_masterfile_values(self, input_file, rscu_sections, enc_rows, cai_rows, gc3_rows):
-        
-        strain_name = os.path.splitext(input_file)[0]  # Get Strain Name
+    def parse_masterfile_values(self, strain_name, rscu_sections, enc_rows, gc3_rows):
         print("Gathering values to add to masterdf for Strain: " + strain_name + "...")
-        
+
         # Populate master file
         print("Gathering RSCU values...")
         rscu_values = []
@@ -311,10 +224,10 @@ class CodonData(object):
             rcsu_row.extend((float(j) for j in rscu_sections[i + 1]))
             rcsu_row.extend((float(j) for j in rscu_sections[i + 2]))
             rcsu_row.extend((float(j) for j in rscu_sections[i + 3]))
-    
+
             rscu_values.append(rcsu_row)
             rscu_gene_list.append(rscu_sections[i + 4][3])
-        
+
         print("Parsing ENC values...")
         enc_values = []
         enc_gene_list = []
@@ -324,12 +237,6 @@ class CodonData(object):
             if enc_fields[1] == '*****':
                 enc_fields[1] = np.nan
             enc_values.append(float(enc_fields[1]))
-        print(enc_gene_list)
-        print(enc_values)
-
-        #GC3 section
-        if len(enc_rows) != len(gc3_rows):
-            print("Different lengths: " + strain_name + " ENC: " + str(len(enc_rows)) + " GC3: " + len(gc3_rows))
 
         print("Parsing GC3 values...")
         gc3_values = []
@@ -337,121 +244,139 @@ class CodonData(object):
         for i in range(1, len(gc3_rows) - 1):
             gc3_fields = gc3_rows[i].split()
             gc3_gene_list.append(gc3_fields[0])
-
             if len(gc3_fields) == 1:
-                print(gc3_fields)
                 gc3_fields.append(np.nan)
-                print(gc3_fields)
             gc3_values.append(float(gc3_fields[1]))
-        print(str(gc3_values))
 
-        # CAI section - TODO
-        cai_values = [0]*len(enc_rows)
-        
         print("Collating values in masterdf...")
-        # Collate into masterfile rows
         for i in range(0, len(rscu_values)):
             masterfile_row = [strain_name, enc_gene_list[i]]
             masterfile_row.extend(rscu_values[i])
             masterfile_row.append(enc_values[i])
-            masterfile_row.append(cai_values[i])
             masterfile_row.append(gc3_values[i])
 
             self.masterdf.loc[len(self.masterdf)] = masterfile_row
 
-    def qc_rscu(self):  # Quality control RSCU  values
-        # For aa
-        print("Beginning quality control of RSCU values across amino acids...")
-        
-        for i in self.masterdf.index:
-            print("Checking row " + str(i))
-            
-            for aa in self.SynonymousCodons:
-                degeneracy = len(self.SynonymousCodons[aa]) 
-                aa_count = 0
-                
-                for codon in self.SynonymousCodons[aa]:
-                    numcolumn = codon+"_Num"
-                    aa_count += self.masterdf.at[i, numcolumn]
-                
-                print("AA: " + aa + ". Codon (column): " + codon +
-                      ". Degeneracy: " + str(degeneracy) + ". Count: " + str(aa_count))
+    def iterate_populate_master_file(self, file_path, infile):
+        input_file = os.path.splitext(infile)[0]
 
+        rscu_sections = self.make_rscu_file(input_file, file_path + "\\")
+        enc_rows = self.make_enc_file(input_file, file_path + "\\")
+        gc3_rows = self.make_gc3_file(input_file, file_path + "\\")
+
+        self.parse_masterfile_values(input_file, rscu_sections, enc_rows, gc3_rows)
+
+    def qc_rscu(self, rscuqc_thres=15):  # Quality control RSCU  values
+        # rscuqc_thres: Threshold for how many times a codon column must have a non-NaN value.
+        # Above threshold counts are retained and vice versa.
+
+        print("Beginning quality control of RSCU values across amino acids...")
+        for i in self.masterdf.index:
+            # print("Checking row " + str(i))
+            for aa in self.SynonymousCodons:
+                degeneracy = len(self.SynonymousCodons[aa])
+                aa_count = 0
+
+                for codon in self.SynonymousCodons[aa]:
+                    aa_count += self.masterdf.at[i, codon + "_Num"]
+                # print("AA: " + aa + ". Codon (column): " + codon +
+                #      ". Degeneracy: " + str(degeneracy) + ". Count: " + str(aa_count))
                 if degeneracy > aa_count:
-                    print("Num of codons less than degeneracy. Filling with Nan values...")
-                    # replace with missing values
+                    # print("Num of codons less than degeneracy. Filling with Nan values...")
                     for codon in self.SynonymousCodons[aa]:
-                        rscu_column = codon + "_RSCU"
-                        self.masterdf.at[i, rscu_column] = np.nan
-        # Across strains
+                        self.masterdf.at[i, codon + "_RSCU"] = np.nan
+
         print("Beginning quality control of RSCU values across strains...")
-        
-        grouped = self.masterdf.groupby("Strain_ID")  
+        grouped = self.masterdf.groupby("Strain_ID")
         for strain, group in grouped:
-            print("Checking codons for Strain:" + strain)
-            
+            # print("Checking codons for Strain:" + strain)
             for aa in self.SynonymousCodons:
                 for codon in self.SynonymousCodons[aa]:
                     rscu_column = codon + "_RSCU"
-                    if group[rscu_column].notna().count() < self.RSCUQC_Thres:
-                        print("Codon with >15 reps ( " + strain + " " + codon + " ). Setting to Nan...")
+                    if group[rscu_column].notna().count() < rscuqc_thres:
+                        # print("Codon with > " + str(rscuqc_thres) + " reps ( " + strain + " " + codon +
+                        # " ). Setting to Nan...")
                         self.masterdf.loc[self.masterdf.Strain_ID == strain, rscu_column] = np.nan
-    
-    def replace_gene_names(self, info_filepath):
-        # Get values from external file
-        print("Changing gene names...")
-        for line in open(info_filepath, "r"):
-            values = line.split(";")
-            for value in values:
-                if "gene=" in value:
-                    gene = value[5:]
-                elif "product=" in value:
-                    extra_fields = value[8:]
-            # Iterate through gene from external file (each line should have a gene)
-            old_gene_name = gene + "_+"
-            new_gene_name = gene + "_" + extra_fields
-            print("Changing gene name from " + old_gene_name + " to " + new_gene_name)
-            self.masterdf.loc[self.masterdf.Gene == old_gene_name, 'Gene'] = new_gene_name
-    
-    def iterate_populate_master_file(self, file_path):
-        print("Changing directory to " + file_path)
-        os.chdir(file_path)
-        
-        for file in os.listdir(file_path):
-            if file.endswith(".fasta"):
-                input_file = os.path.splitext(file)[0]
-                rscu_sections = self.make_rscu_file(input_file)
-                enc_rows = self.make_enc_file(input_file)
-                cai_rows = self.make_cai_file(input_file)
-                gc3_rows = self.make_gc3_file(input_file)
 
-                self.parse_masterfile_values(input_file, rscu_sections, enc_rows, cai_rows, gc3_rows)
-        self.qc_rscu()
-        self.replace_gene_names("Extra_geneInfoField.txt")
+
+    def set_fop_ref(self, fop_ref_path):
+        print("reading fop file...")
+        self.fop_ref_df = pd.read_csv(fop_ref_path)
+
+    def set_fop_dict(self, fop_type, type_column_name='SMTS', tissue_column_name='Tissue'):
+        self.fop_type = fop_type
+        print("setting reference..." + fop_type)
+        columns = ['A_GCA', 'A_GCC', 'A_GCG', 'A_GCU', 'C_UGC', 'C_UGU', 'E_GAA', 'E_GAG', 'D_GAC', 'D_GAU',
+                   'G_GGA', 'G_GGC', 'G_GGG', 'G_GGU', 'F_UUC', 'F_UUU', 'I_AUA', 'I_AUC', 'I_AUU', 'H_CAC',
+                   'H_CAU', 'K_AAA', 'K_AAG', 'L_CUA', 'L_CUC', 'L_CUG', 'L_CUU', 'L_UUA', 'L_UUG', 'N_AAC',
+                   'N_AAU', 'Q_CAA', 'Q_CAG', 'P_CCA', 'P_CCC', 'P_CCG', 'P_CCU', 'S_AGC', 'S_AGU', 'S_UCA',
+                   'S_UCC', 'S_UCG', 'S_UCU', 'R_AGA', 'R_AGG', 'R_CGA', 'R_CGC', 'R_CGG', 'R_CGU', 'T_ACA',
+                   'T_ACC', 'T_ACG', 'T_ACU', 'V_GUA', 'V_GUC', 'V_GUG', 'V_GUU', 'Y_UAC', 'Y_UAU']
+        if fop_type == 'mode':
+            self.fop_dic = self.fop_ref_df.groupby(type_column_name)[columns].agg(pd.Series.mode)
+        elif fop_type == 'random':
+            self.fop_dic = self.fop_ref_df.groupby(type_column_name)[columns].first()
+        elif fop_type == 'all':
+            # Rename Tissue column to include it's type (e.g. Whole Blood, EBV infected etc)
+            self.fop_dic = self.fop_ref_df.assign(Tissue=self.fop_ref_df[tissue_column_name]
+                                                  + "_" + self.fop_ref_df[type_column_name])
+            columns.insert(0, tissue_column_name)
+            self.fop_dic = self.fop_dic[columns]  # Filter columns
+
+            self.fop_dic.set_index('Tissue', drop=True, inplace=True)  # Set Tissue as index
+
+    def calculate_fop(self, tissues):
+        codons = ['A_GCA', 'A_GCC', 'A_GCG', 'A_GCU', 'C_UGC', 'C_UGU', 'E_GAA', 'E_GAG', 'D_GAC', 'D_GAU',
+                  'G_GGA', 'G_GGC', 'G_GGG', 'G_GGU', 'F_UUC', 'F_UUU', 'I_AUA', 'I_AUC', 'I_AUU', 'H_CAC',
+                  'H_CAU', 'K_AAA', 'K_AAG', 'L_CUA', 'L_CUC', 'L_CUG', 'L_CUU', 'L_UUA', 'L_UUG', 'N_AAC',
+                  'N_AAU', 'Q_CAA', 'Q_CAG', 'P_CCA', 'P_CCC', 'P_CCG', 'P_CCU', 'S_AGC', 'S_AGU', 'S_UCA',
+                  'S_UCC', 'S_UCG', 'S_UCU', 'R_AGA', 'R_AGG', 'R_CGA', 'R_CGC', 'R_CGG', 'R_CGU', 'T_ACA',
+                  'T_ACC', 'T_ACG', 'T_ACU', 'V_GUA', 'V_GUC', 'V_GUG', 'V_GUU', 'Y_UAC', 'Y_UAU']
+        prefix = 'FOP'
+        if tissues == 'all':
+            tissues = self.fop_dic.index.tolist()
+
+        fop_dict = self.fop_dic.to_dict(orient='index')  # Transform dataframe to dictionary for quicker access
+        fop_all_values = {}
+        for row in self.masterdf.itertuples():
+            total_index = self.masterdf.columns.get_loc('Total_Num_Codons') + 1  # Get index of column with codon count
+            fop_row_values = {}
+            for tissue in tissues:
+                fop = 0
+                for codon in codons:
+                    if fop_dict[tissue][codon] == 1:
+                        col_index = self.masterdf.columns.get_loc(codon + '_Num') + 1
+                        fop += row[col_index]
+                if row[total_index] == 0:
+                    fop = np.nan
+                else:
+                    fop = fop / row[total_index]
+                print(fop)
+                fop_row_values[prefix + "_" + tissue] = fop
+            fop_all_values[row[0]] = fop_row_values
+
+        print('making dataframe fop')
+        fop_df = pd.DataFrame.from_dict(fop_all_values, orient='index')
+        print('joining')
+        self.masterdf = self.masterdf.join(fop_df)
+
         
-    def export_csv(self, outfilepath):
-        self.masterdf.to_csv(outfilepath, index=False)
+    def export_csv(self, out_name, out_path=os.path.dirname(os.path.realpath(__file__)) + '//Output//'):
+        self.masterdf.to_csv(out_path+out_name, index=False)
         
     def import_csv(self, csv_path):
         self.masterdf = pd.read_csv(csv_path)
-        
 
-#  RUNNING IT
 
 model = CodonData()
 
 # filepath= os.path.dirname(os.path.realpath(__file__))
 filepath = os.path.abspath("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage\\fasta_cds")
-# model.iterate_populate_master_file(filepath)
-# model.export_csv('masterfile.csv')
+for file in os.listdir(filepath):
+    if file.endswith(".fasta"):
+        model.iterate_populate_master_file(filepath, file)
 
-tissues = ['Lung', 'Salivary Gland', 'Small Intestine', 'Kidney', 'Liver', 'Pancreas']
-
-model.import_csv('no_masterfile.csv')
-
-model.set_fop_ref('fop_ref.csv')
-
-model.set_fop_dict('mode')
+'''
 model.calculate_fop(tissues)
 print(model.masterdf)
 model.export_csv('fopmode_masterfile.csv')
@@ -469,11 +394,4 @@ model.export_csv('foprandom_masterfile.csv')
 # model.calculate_fop('all')
 # model.export_csv('fopall_masterfile.csv')
 
-'''
-Code used to make fop reference file:
-fop_codon_df = pd.read_csv(codon_file, sep='\t', header=0)
-sample_ref_df = pd.read_csv(info_file, sep='\t', header=0, usecols=['SAMPID', 'SMTS', 'SMTSD'])
-self.fop_ref_df = fop_codon_df.set_index('Tissue').join(sample_ref_df.set_index('SAMPID'))
-self.fop_ref_df = self.fop_ref_df.dropna(axis=1)
-self.fop_ref_df.to_csv('fop_ref.csv')
 '''

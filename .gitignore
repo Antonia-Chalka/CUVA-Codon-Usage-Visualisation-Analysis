@@ -3,3 +3,6 @@
 fasta_cds/
 __pycache__/
 ref_files/
+.Rhistory
+Output/
+codonw_out/
