@@ -3,8 +3,8 @@ Created on 12 Jun 2019
 
 @author: 2138645C
 """
-import pandas as pd
 import os
+import pandas as pd
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
 
@@ -49,9 +49,9 @@ Gene_RSCU_Clustermap <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store values that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store values that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -72,9 +72,9 @@ Strain_RSCU_Clustermap <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store values that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store values that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data  
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -93,15 +93,16 @@ ENC_Heatmap <- function(data, outpath, gene_ann_data, strain_ann_data)
   # Transpose ENC data
   dat <- acast(data, data[,1]~data[,2], value.var='ENC')
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  colremoved <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store column values that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
-  rowremoved <- dat[,colSums(is.na(dat)) >= nrow(dat)-nrow(dat)/3] #Store row that will be removed
-  dat <- dat[,colSums(is.na(dat)) < nrow(dat)-nrow(dat)/3] #Remove values
-  removed <- rbind(colremoved, rowremoved) # Combined removed values
+  #Remove rows and columns with over half of their values as nan.
+  colremoved <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store column values that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
+  rowremoved <- dat[,colSums(is.na(dat)) >= nrow(dat)-nrow(dat)/2] #Store row that will be removed
+  dat <- dat[,colSums(is.na(dat)) < nrow(dat)-nrow(dat)/2] #Remove values
+  
+  # removed <- rbind(colremoved, rowremoved) # Combined removed values
   
   #Export data    
-  write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
+  # write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
   write.table(dat, file = paste(outpath, "data.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
   
   #Call appropriate figure method 
@@ -133,9 +134,9 @@ Gene_RSCU_Clustermap_Di <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -154,9 +155,9 @@ Gene_RSCU_Clustermap_Tri <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -175,9 +176,9 @@ Gene_RSCU_Clustermap_Tetra <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -196,9 +197,9 @@ Gene_RSCU_Clustermap_Hexa <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -217,9 +218,9 @@ Strain_RSCU_Clustermap_Di <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -238,9 +239,9 @@ Strain_RSCU_Clustermap_Tri <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -259,9 +260,9 @@ Strain_RSCU_Clustermap_Tetra <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -280,9 +281,9 @@ Strain_RSCU_Clustermap_Hexa <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -301,9 +302,9 @@ FOP_Gene_Clustermap <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -322,9 +323,9 @@ FOP_Strain_Clustermap <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -344,9 +345,9 @@ FOP_Ref_Clustermap  <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -371,9 +372,9 @@ FOP_SamplesGenes_Clustermap  <- function(data, outpath, ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -393,9 +394,9 @@ FOP_SamplesStrains_Clustermap  <- function(data, outpath,ann_data)
   #Convert input data to matrix
   dat <- as.matrix(data)
   
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -409,11 +410,11 @@ FOP_SamplesStrains_Clustermap  <- function(data, outpath,ann_data)
   }
 }
 
-FOP_GC3_Genes  <- function(dat, outpath)
+ENC_GC3_Genes  <- function(dat, outpath)
 {
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -435,11 +436,11 @@ FOP_GC3_Genes  <- function(dat, outpath)
   dev.off()
 }
 
-FOP_GC3_Strains  <- function(dat, outpath)
+ENC_GC3_Strains  <- function(dat, outpath)
 {
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -461,11 +462,11 @@ FOP_GC3_Strains  <- function(dat, outpath)
   dev.off()
 }
 
-FOP_GC3_ALL  <- function(dat, outpath)
+ENC_GC3_ALL  <- function(dat, outpath)
 {
-  #Remove rows and columns with over 2/3 of their values as nan.
-  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/3,] #Store row that will be removed
-  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/3,] #Remove values
+  #Remove rows and columns with over half of their values as nan.
+  removed <- dat[rowSums(is.na(dat)) >= ncol(dat)-ncol(dat)/2,] #Store row that will be removed
+  dat <- dat[rowSums(is.na(dat)) < ncol(dat)-ncol(dat)/2,] #Remove values
   
   #Export data    
   write.table(removed, file = paste(outpath, "nan","removed.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
@@ -505,6 +506,7 @@ make_heatmap <- function(dat, figure_palette, colsize, rowsize, limits, outname)
 }
 
 make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, limits, outname) {
+  print(ann_data)
   png(outname, width = 300, height = 300, units='mm', res = 300)
   pheatmap(dat, 
            #Color Options (general palette, nan color, do not display border)
@@ -567,15 +569,30 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
                'R_CGU_RSCU', 'R_CGC_RSCU', 'R_CGA_RSCU', 'R_CGG_RSCU', 'R_AGA_RSCU', 'R_AGG_RSCU',
                'S_UCU_RSCU', 'S_UCC_RSCU', 'S_UCA_RSCU', 'S_UCG_RSCU', 'S_AGU_RSCU', 'S_AGC_RSCU']
 
-    def __init__(self, data, gene_annotation=None, strain_annotation=None, regex="Possible|note|RL5A_+|RL6_+"):
+    def __init__(self, data, gene_annotation_path=None, strain_annotation_path=None, regex="Possible|note|RL5A_+|RL6_+"):
         self.masterdf = data
-        self.gene_ann = gene_annotation
-        self.strain_ann = strain_annotation
+
+        if gene_annotation_path is not None:
+            gene_ann = pd.read_csv(gene_annotation_path)
+            gene_ann.set_index(gene_ann.columns[0], inplace=True)
+            self.gene_ann = gene_ann
+            print(self.gene_ann)
+        else:
+            self.gene_ann = None
+
+        if strain_annotation_path is not None:
+            strain_ann = pd.read_csv(strain_annotation_path)
+            strain_ann.set_index(strain_ann.column[0], inplace=True)
+            self.strain_ann = strain_ann
+        else:
+            self.strain_ann = None
+
         self.filter_regex = regex
         pandas2ri.activate()
 
     def make_graph(self, graph_type, out_path=os.path.dirname(os.path.realpath(__file__)) + '//Output//'):
         # Regex filter
+        print(graph_type)
         if graph_type != 'FOP_Ref_Clustermap':
             filter_rows = self.masterdf['Gene'].str.contains(self.filter_regex)
             removed = self.masterdf[filter_rows]
@@ -586,6 +603,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         if graph_type == 'Gene_RSCU_Clustermap':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.rscu_columns].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -597,6 +615,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
 
             # group by Strain, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.rscu_columns].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # Check number of strains in data, because clustering algorithm requires 2 rows/columns
             if len(graph_values.index) > 1:
@@ -609,6 +628,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'ENC_Heatmap':
 
             graph_values = self.masterdf[['Strain_ID', 'Gene', 'ENC']]  # Obtain relevant columns
+            graph_values.to_csv(outvar, index=True)
 
             # Check number of strains + genes (rows and columns), because heatmap.2 requires 2 rows/columns
             if graph_values.Strain_ID.nunique() > 1 and graph_values.Gene.nunique() > 1:
@@ -624,6 +644,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Di':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.di_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -634,6 +655,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Tri':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.tri_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -644,6 +666,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Tetra':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.tetra_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -654,6 +677,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Hexa':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.hexa_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -664,6 +688,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Di':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.di_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) > 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -675,6 +700,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Tri':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.tri_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) > 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -686,6 +712,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Tetra':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.tetra_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) > 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -697,6 +724,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Hexa':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.hexa_aa].mean()
+            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) != 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -708,6 +736,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_Gene_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Gene')[fop_columns].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -718,6 +747,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_Strain_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Strain_ID')[fop_columns].mean()
+            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) != 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -728,11 +758,14 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
 
         elif graph_type == 'FOP_Ref_Clustermap':
             graph_values = self.masterdf
+            graph_values = graph_values.select_dtypes(include='number')
+
             self.RFunction.FOP_Ref_Clustermap(graph_values, outvar)
 
         elif graph_type == 'FOP_SamplesGenes_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Gene')[fop_columns].mean()
+            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -743,6 +776,8 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_SamplesStrains_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Strain_ID')[fop_columns].mean()
+            graph_values.to_csv(outvar, index=True)
+
             if len(graph_values.index) != 1:
                 # If annotation file has been loaded, add it when calling R function
                 if self.strain_ann is None:
@@ -750,21 +785,26 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
                 elif self.strain_ann is not None:
                     self.RFunction.FOP_SamplesStrains_Clustermap(graph_values, outvar, self.strain_ann)
 
-        elif graph_type == 'FOP_GC3_Genes':
+        elif graph_type == 'ENC_GC3_Genes':
             graph_values = self.masterdf.groupby('Gene')[['ENC', 'GC3']].mean()
-            self.RFunction.FOP_GC3_Genes(graph_values, outvar)
+            graph_values.to_csv(outvar, index=True)
 
-        elif graph_type == 'FOP_GC3_Strains':
+            self.RFunction.ENC_GC3_Genes(graph_values, outvar)
+
+        elif graph_type == 'ENC_GC3_Strains':
             graph_values = self.masterdf.groupby('Strain_ID')[['ENC', 'GC3']].mean()
+            graph_values.to_csv(outvar, index=True)
+
             if len(graph_values.index) != 1:
-                self.RFunction.FOP_GC3_Strains(graph_values, outvar)
+                self.RFunction.ENC_GC3_Strains(graph_values, outvar)
 
-        elif graph_type == 'FOP_GC3_ALL':
+        elif graph_type == 'ENC_GC3_ALL':
             graph_values = self.masterdf[['Gene', 'Strain_ID', 'ENC', 'GC3']]
-            self.RFunction.FOP_GC3_ALL(graph_values, outvar)
+            graph_values.to_csv(outvar, index=True)
+
+            self.RFunction.ENC_GC3_ALL(graph_values, outvar)
 
 
-#TODO SORT OUT FOP REF FIGURE CREATION
 '''
 # Make fop ref clustermap
 fop_ref = pd.read_csv("fop_ref.csv")
@@ -773,13 +813,11 @@ fop_ref.drop(['SMTS','SMTSD'], axis=1, inplace=True)
 print(fop_ref)
 new = FigureGen(fop_ref)
 new.make_graph('FOP_Ref_Clustermap')
-'''
 
 new = FigureGen(pd.read_csv("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage_Output\\fopmode_masterfile.csv"),
-                pd.read_csv("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage\\ref_files\\time_class_name.csv", index_col='Gene')
+                pd.read_csv("C:\\Users\\anni1\\PycharmProjects\\MScProject\\CodonUsage\\ref_files\\time_class_name.csv",
+                 index_col='Gene')
                 )
-
-
 new.make_graph('Gene_RSCU_Clustermap')
 new.make_graph('Strain_RSCU_Clustermap')
 
@@ -800,7 +838,7 @@ new.make_graph('FOP_Strain_Clustermap')
 new.make_graph('FOP_SamplesStrains_Clustermap')
 new.make_graph('FOP_SamplesGenes_Clustermap')
 
-new.make_graph('FOP_GC3_ALL')
-new.make_graph('FOP_GC3_Genes')
-new.make_graph('FOP_GC3_Strains')
-
+new.make_graph('ENC_GC3_ALL')
+new.make_graph('ENC_GC3_Genes')
+new.make_graph('ENC_GC3_Strains')
+'''

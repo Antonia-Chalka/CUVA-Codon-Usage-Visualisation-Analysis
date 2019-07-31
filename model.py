@@ -7,7 +7,7 @@ Created on 20 May 2019
 import pandas as pd
 import os
 import numpy as np
-from subprocess import call
+import subprocess as sb
 
 '''
 Class representing codon data across strains and genes. Relies on codonW to perform RSCU and ENC analysis.
@@ -151,7 +151,7 @@ class CodonData(object):
         self.fop_ref_df = fop_ref_df
         self.fop_dic = fop_dic
         self.codonw_dir = codonw_dir
-        self.codonw_out_dir = codonw_out_dir + "\\"
+        self.codonw_out_dir = codonw_out_dir
 
     def make_rscu_file(self, input_file, input_dir):
         print("Calculating RSCU values for file:" + input_file)
@@ -162,8 +162,8 @@ class CodonData(object):
             self.codonw_out_dir + input_file + '.none ' +\
             self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        call(cmd, shell=True)
-        
+        out = sb.run(cmd, stdout=sb.PIPE).stdout.decode('utf-8')
+
         # print("Parsing RSCU file...")
         rscu_file = open(self.codonw_out_dir + input_file + '.blk', "r")
         sections = rscu_file.read().split("\n\n")  # split when 2 newlines (1 gene has 5 of such sections)
@@ -172,7 +172,7 @@ class CodonData(object):
         sections = [[i for i in x if i not in self.AANames and i not in self.CodonNames] for x in sections]
         rscu_file.close()
 
-        return sections
+        return sections, out
     
     def make_enc_file(self, input_file, input_dir):
         print("Calculating ENC values for file:" + input_file)
@@ -182,14 +182,14 @@ class CodonData(object):
             self.codonw_out_dir + input_file + '.enc ' +\
             self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        call(cmd, shell=True)
+        out = sb.run(cmd, stdout=sb.PIPE).stdout.decode('utf-8')
 
         print("Parsing ENC file...")
         enc_file = open(self.codonw_out_dir + input_file + ".enc", "r")
         enc_rows = enc_file.read().split("\n")  # Extract rows
         enc_file.close()
         
-        return enc_rows
+        return enc_rows, out
 
     def make_gc3_file(self, input_file, input_dir):
         print("Calculating GC3 values for file: " + input_file)
@@ -199,14 +199,14 @@ class CodonData(object):
             self.codonw_out_dir + input_file + '.gc3 ' + \
             self.codonw_out_dir + input_file + '.blk'
         print("Running CodonW command: " + cmd)
-        call(cmd, shell=True)
+        out = sb.run(cmd, stdout=sb.PIPE).stdout.decode('utf-8')
 
         print("Parsing GC3 file...")
         gc3_file = open(self.codonw_out_dir + input_file + ".gc3", "r")
         gc3_rows = gc3_file.read().split("\n")  # Extract rows
         gc3_file.close()
 
-        return gc3_rows
+        return gc3_rows, out
 
     def parse_masterfile_values(self, strain_name, rscu_sections, enc_rows, gc3_rows):
         print("Gathering values to add to masterdf for Strain: " + strain_name + "...")
@@ -260,11 +260,12 @@ class CodonData(object):
     def iterate_populate_master_file(self, file_path, infile):
         input_file = os.path.splitext(infile)[0]
 
-        rscu_sections = self.make_rscu_file(input_file, file_path + "\\")
-        enc_rows = self.make_enc_file(input_file, file_path + "\\")
-        gc3_rows = self.make_gc3_file(input_file, file_path + "\\")
+        rscu_sections, rscu_out = self.make_rscu_file(input_file, file_path)
+        enc_rows, enc_out = self.make_enc_file(input_file, file_path)
+        gc3_rows, gc3_out = self.make_gc3_file(input_file, file_path)
 
         self.parse_masterfile_values(input_file, rscu_sections, enc_rows, gc3_rows)
+        return rscu_out + "\n" + enc_out + "\n" + gc3_out + "\n"
 
     def qc_rscu(self, rscuqc_thres=15):  # Quality control RSCU  values
         # rscuqc_thres: Threshold for how many times a codon column must have a non-NaN value.
@@ -297,7 +298,6 @@ class CodonData(object):
                         # print("Codon with > " + str(rscuqc_thres) + " reps ( " + strain + " " + codon +
                         # " ). Setting to Nan...")
                         self.masterdf.loc[self.masterdf.Strain_ID == strain, rscu_column] = np.nan
-
 
     def set_fop_ref(self, fop_ref_path):
         print("reading fop file...")
@@ -351,7 +351,6 @@ class CodonData(object):
                     fop = np.nan
                 else:
                     fop = fop / row[total_index]
-                print(fop)
                 fop_row_values[prefix + "_" + tissue] = fop
             fop_all_values[row[0]] = fop_row_values
 
@@ -360,7 +359,6 @@ class CodonData(object):
         print('joining')
         self.masterdf = self.masterdf.join(fop_df)
 
-        
     def export_csv(self, out_name, out_path=os.path.dirname(os.path.realpath(__file__)) + '//Output//'):
         self.masterdf.to_csv(out_path+out_name, index=False)
         
@@ -368,6 +366,7 @@ class CodonData(object):
         self.masterdf = pd.read_csv(csv_path)
 
 
+'''
 model = CodonData()
 
 # filepath= os.path.dirname(os.path.realpath(__file__))
@@ -376,7 +375,7 @@ for file in os.listdir(filepath):
     if file.endswith(".fasta"):
         model.iterate_populate_master_file(filepath, file)
 
-'''
+
 model.calculate_fop(tissues)
 print(model.masterdf)
 model.export_csv('fopmode_masterfile.csv')
