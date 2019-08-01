@@ -106,7 +106,7 @@ ENC_Heatmap <- function(data, outpath, gene_ann_data, strain_ann_data)
   write.table(dat, file = paste(outpath, "data.csv", sep="_"), quote = FALSE, sep = ",", col.names =NA)
   
   #Call appropriate figure method 
-  if(missing(ann_data) && missing(strain_ann_data)) { #Make non-annotated heatmap if there is no annotation data
+  if(missing(gene_ann_data) && missing(strain_ann_data)) { #Make non-annotated heatmap if there is no annotation data
     make_heatmap(dat, enc.palette, 3, 3, c(seq(21,64,length.out=45)), paste(outpath, "figure.png", sep="_"))
   } else { #Make annotated heatmap if annotation data has been provided 
     png(outname, width = 300, height = 300, units='mm', res = 300)
@@ -603,7 +603,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         if graph_type == 'Gene_RSCU_Clustermap':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.rscu_columns].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -615,7 +614,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
 
             # group by Strain, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.rscu_columns].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # Check number of strains in data, because clustering algorithm requires 2 rows/columns
             if len(graph_values.index) > 1:
@@ -628,7 +626,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'ENC_Heatmap':
 
             graph_values = self.masterdf[['Strain_ID', 'Gene', 'ENC']]  # Obtain relevant columns
-            graph_values.to_csv(outvar, index=True)
 
             # Check number of strains + genes (rows and columns), because heatmap.2 requires 2 rows/columns
             if graph_values.Strain_ID.nunique() > 1 and graph_values.Gene.nunique() > 1:
@@ -644,7 +641,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Di':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.di_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -655,7 +651,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Tri':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.tri_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -666,7 +661,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Tetra':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.tetra_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -677,7 +671,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Gene_RSCU_Clustermap_Hexa':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Gene')[self.hexa_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -688,7 +681,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Di':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.di_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) > 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -700,7 +692,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Tri':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.tri_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) > 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -712,7 +703,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Tetra':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.tetra_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) > 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -724,7 +714,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'Strain_RSCU_Clustermap_Hexa':
             # group by Gene, get only RSCU columns and calculate each one's mean
             graph_values = self.masterdf.groupby('Strain_ID')[self.hexa_aa].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) != 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -736,7 +725,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_Gene_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Gene')[fop_columns].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -747,7 +735,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_Strain_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Strain_ID')[fop_columns].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) != 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -765,7 +752,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_SamplesGenes_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Gene')[fop_columns].mean()
-            graph_values.to_csv(outvar, index=True)
 
             # If annotation file has been loaded, add it when calling R function
             if self.gene_ann is None:
@@ -776,7 +762,6 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
         elif graph_type == 'FOP_SamplesStrains_Clustermap':
             fop_columns = self.masterdf.filter(regex="^FOP_*").columns.tolist()
             graph_values = self.masterdf.groupby('Strain_ID')[fop_columns].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) != 1:
                 # If annotation file has been loaded, add it when calling R function
@@ -787,20 +772,17 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
 
         elif graph_type == 'ENC_GC3_Genes':
             graph_values = self.masterdf.groupby('Gene')[['ENC', 'GC3']].mean()
-            graph_values.to_csv(outvar, index=True)
 
             self.RFunction.ENC_GC3_Genes(graph_values, outvar)
 
         elif graph_type == 'ENC_GC3_Strains':
             graph_values = self.masterdf.groupby('Strain_ID')[['ENC', 'GC3']].mean()
-            graph_values.to_csv(outvar, index=True)
 
             if len(graph_values.index) != 1:
                 self.RFunction.ENC_GC3_Strains(graph_values, outvar)
 
         elif graph_type == 'ENC_GC3_ALL':
             graph_values = self.masterdf[['Gene', 'Strain_ID', 'ENC', 'GC3']]
-            graph_values.to_csv(outvar, index=True)
 
             self.RFunction.ENC_GC3_ALL(graph_values, outvar)
 
