@@ -1,9 +1,16 @@
 # CUVA (Codon Usage Visualisation & Analysis)
+Written in Python 3.7
 
 ## Requirements:
  
 * CodonW installation 
 * R installation in path
+
+### Python External Libraries (if running py script):
+* pandas: pip install pandas
+* PySimpleGui: pip install PySimpleGUI
+* rpy2: pip install rpy2
+
 
 ## Manual
 
@@ -19,7 +26,8 @@ ATGG......
 
 >Gene Name 2
 
-ATGTGACCC...
+ATGTGACCC...'
+
 
  The file name of each fasta file is used an identifier (can be strain/genome/cultivar name, or any other variable of choice).
  
