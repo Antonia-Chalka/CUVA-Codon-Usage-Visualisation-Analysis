@@ -2,7 +2,11 @@
 .ipynb_checkpoints/
 fasta_cds/
 __pycache__/
-ref_files/
 .Rhistory
 Output/
 codonw_out/
+ref_files/Extra_geneInfoField.txt
+ref_files/FOP_SampleAttributesDSCodons.txt
+ref_files/fop_ref.csv
+ref_files/FOP_SampleAttributesDSSample.txt
+ref_files/time_class_name.csv
