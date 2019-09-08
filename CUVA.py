@@ -308,10 +308,12 @@ class CodonData(object):
             # Rename Tissue column to include it's type (e.g. Whole Blood, EBV infected etc)
             self.fop_dic = self.fop_ref_df.assign(Tissue=self.fop_ref_df[tissue_column_name]
                                                   + "_" + self.fop_ref_df[type_column_name])
-            columns.insert(0, tissue_column_name)
+            self.fop_dic.set_index('Tissue', drop=True, inplace=True)
+            columns.insert(0, type_column_name)
+
             self.fop_dic = self.fop_dic[columns]  # Filter columns
 
-            self.fop_dic.set_index('Tissue', drop=True, inplace=True)  # Set Tissue as index
+
 
     def calculate_fop(self, tissues):
         codons = ['A_GCA', 'A_GCC', 'A_GCG', 'A_GCU', 'C_UGC', 'C_UGU', 'E_GAA', 'E_GAG', 'D_GAC', 'D_GAU',
@@ -850,7 +852,7 @@ make_heatmap <- function(dat, figure_palette, colsize, rowsize, limits, outname)
 }
 
 make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, limits, outname) {
-  print(ann_data)
+  # print(ann_data)
   png(outname, width = 300, height = 300, units='mm', res = 300)
   pheatmap(dat, 
            #Color Options (general palette, nan color, do not display border)
@@ -921,7 +923,7 @@ make_ann_heatmap <- function(dat, ann_data, figure_palette,  colsize, rowsize, l
             gene_ann = pd.read_csv(gene_annotation_path)
             gene_ann.set_index(gene_ann.columns[0], inplace=True)
             self.gene_ann = gene_ann
-            print(self.gene_ann)
+
         else:
             self.gene_ann = None
 
@@ -1174,7 +1176,7 @@ FOP_Layout = [
         [sg.Text('Optimal Codon Table (including type) Path:'),
          sg.In('None selected', key='_FOPRefPath_',size=(40,None)),
          sg.FileBrowse(button_text='Choose file', file_types=(('CSV', '*.csv'),), target='_FOPRefPath_')],
-        [sg.Text('Sample ID Column Name: '), sg.In('Tissue', key='_FOPTissueColumn_')],
+        [sg.Text('Sample ID Column Name: '), sg.In('Sample_ID', key='_FOPTissueColumn_')],
         [sg.Text('Tissue Type Column Name: '), sg.In('SMTS', key='_FOPSampleColumn_')]
     ], title='Reference File Settings', relief='raised')],
     [sg.Frame(layout=[
@@ -1311,11 +1313,12 @@ while True:
         # Calculate FOP  (optional)
         if values['_FOPCheck_'] is True:
             # Export non-fop masterfile (optional)
-            if values['_Extramasterdf_'] is True:
-                main_model.export_csv(values['_ExtramasterdfName_'], values['_OutPath_'] + "\\")
+            # if values['_Extramasterdf_'] is True:
+            #    main_model.export_csv(values['_ExtramasterdfName_'], values['_OutPath_'] + "\\")
 
             main_model.set_fop_ref(values['_FOPRefPath_'])
 
+            '''
             fop_type = None
             if values['_FOPModal_'] is True:
                 fop_type = 'mode'
@@ -1323,7 +1326,8 @@ while True:
                 fop_type = 'random'
             elif values['_FOPAll_'] is True:
                 fop_type = 'all'
-            main_model.set_fop_dict(fop_type, type_column_name=values['_FOPTissueColumn_'],
+                '''
+            main_model.set_fop_dict('all', type_column_name=values['_FOPTissueColumn_'],
                                     tissue_column_name=values['_FOPSampleColumn_'])
 
             if values['_FOPTissues_'] != 'all':
@@ -1349,8 +1353,8 @@ while True:
                                 gene_annotation_path=gene_annot, strain_annotation_path=genome_annot)
             if values['_FOPCheck_'] is True:
                 pass
-            elif values['_masterfileFOP_'] is True:
-                figure_types = [figure for figure in figure_types if figure not in {'FOP_Ref_Clustermap'}]
+            # elif values['_masterfileFOP_'] is True:
+            #    figure_types = [figure for figure in figure_types if figure not in {'FOP_Ref_Clustermap'}]
             else:
                 figure_types = [figure for figure in figure_types if figure not in {'FOP_Gene_Clustermap',
                                                                                     'FOP_Strain_Clustermap',
@@ -1369,6 +1373,12 @@ while True:
                         figures.make_graph(figure, out_path=values['_OutPath_'] + "\\")
                     except:
                         print("Could not make figure: " + figure)
+                        figures = FigureGen(data=main_model.masterdf, regex=values['_FigRegex_'],
+                                            gene_annotation_path=None, strain_annotation_path=None)
+                        figures.make_graph(figure, out_path=values['_OutPath_'] + "\\")
+
+
+
 
 window.Close()
 
